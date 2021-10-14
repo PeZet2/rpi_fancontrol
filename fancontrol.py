@@ -16,13 +16,20 @@ args = sys.argv
 
 MODE_AUTO = '--auto'
 MODE_CHECK = '--check-temp'
+MODE_ON = '--on'
+MODE_OFF = '--off'
 LOG_FILE = 'fancontrol.log'
 
+EXECUTION_INFO = '''Wrong parameters provided. Use on of the following:
+--auto        checks temperature periodicaly and turns fan on and off
+--check-temp  check temperature one time
+--on          turns fan on
+--off         turns fan off'''
 
 def logger(func):
     def wrapper(*args, **kwargs):
         result = func(*args, **kwargs)
-        time_format = '%Y-%m-%d %H:%m:%S'
+        time_format = '%Y-%m-%d %H:%M:%S'
         with open(LOG_FILE, 'a') as f:
             f.write(f"[{datetime.now().strftime(time_format)}] -> FUNCTION: {func.__name__}\n")
             f.write(f"[{datetime.now().strftime(time_format)}] -> results: {result}\n")
@@ -36,7 +43,7 @@ def check_temp():
     temp = output.stdout.decode()
     temp = temp.split('=')[1].split('\'')[0]
     return temp
- 
+
 
 def fancontrol(fan):
     temp = float(check_temp())
@@ -57,19 +64,23 @@ def turnFan(fan, onoff):
 
 def main(args):
     if len(args) <= 1:
-        print(f"Mode not recognized. Please type {MODE_AUTO} or {MODE_CHECK}")
+        print(f"{EXECUTION_INFO}")
     else:
         mode = args[1]
+        fan = OutputDevice(pin)
         if mode == MODE_AUTO:
-            fan = OutputDevice(pin)
             turnFan(fan, "on")
             while True:
                 fancontrol(fan)
                 time.sleep(sleep_value)
         elif mode == MODE_CHECK:
             temp = float(check_temp())
+        elif mode == MODE_ON:
+            turnFan(fan, "on")
+        elif mode == MODE_OFF:
+            turnFan(fan, "off")
         else:
-            print(f"Mode not recognized. Please type {MODE_AUTO} or {MODE_CHECK}")
+            print(f"{EXECUTION_INFO}")
 
 
 if __name__ == '__main__':
